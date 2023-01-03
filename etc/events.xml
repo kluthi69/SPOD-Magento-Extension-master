@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <!-- webhooks: product -->
+    <event name="spodsync_webhook_event_article_removed">
+        <observer name="observer_spodsync_webhook_article_removed" instance="Spod\Sync\Subscriber\Webhook\Article\Removed" />
+    </event>
+    <event name="spodsync_webhook_event_article_added">
+        <observer name="observer_spodsync_webhook_article_added" instance="Spod\Sync\Subscriber\Webhook\Article\Added" />
+    </event>
+    <event name="spodsync_webhook_event_article_updated">
+        <observer name="observer_spodsync_webhook_event_article_updated" instance="Spod\Sync\Subscriber\Webhook\Article\Updated" />
+    </event>
+    <event name="spodsync_webhook_event_article_initial_sync">
+        <observer name="observer_spodsync_webhook_event_article_initial_sync" instance="Spod\Sync\Subscriber\Webhook\Article\InitialSync" />
+    </event>
+
+    <!-- webhooks: order -->
+    <event name="spodsync_webhook_event_order_processed">
+        <observer name="observer_spodsync_webhook_event_order_processed" instance="Spod\Sync\Subscriber\Webhook\Order\Processed" />
+    </event>
+    <event name="spodsync_webhook_event_order_cancelled">
+        <observer name="observer_spodsync_webhook_event_order_cancelled" instance="Spod\Sync\Subscriber\Webhook\Order\Cancelled" />
+    </event>
+
+    <!-- webhooks: shipment -->
+    <event name="spodsync_webhook_event_shipment_sent">
+        <observer name="observer_spodsync_webhook_event_shipment_sent" instance="Spod\Sync\Subscriber\Webhook\Shipment\Sent" />
+    </event>
+
+    <!-- cancel order -->
+    <event name="order_cancel_after">
+        <observer name="spodsync_order_cancel_after" instance="Spod\Sync\Subscriber\CancelOrder" />
+    </event>
+    <event name="sales_order_creditmemo_save_after">
+        <observer name="spodsync_order_creditmemo_save_after" instance="Spod\Sync\Subscriber\CreditmemoSaveAfter" />
+    </event>
+</config>

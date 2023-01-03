@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="spod:sync" xsi:type="object">Spod\Sync\Console\Productsync</item>
+                <item name="spod:webhook:manage" xsi:type="object">Spod\Sync\Console\WebhookRegistration</item>
+                <item name="spod:webhook:queue" xsi:type="object">Spod\Sync\Console\WebhookQueue</item>
+                <item name="spod:order:queue" xsi:type="object">Spod\Sync\Console\OrderQueue</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- atm: json encode/decode -->
+    <preference for="Spod\Sync\Api\ResultDecoder" type="Spod\Sync\Model\Decoder\JsonDecoder" />
+    <preference for="Spod\Sync\Api\PayloadEncoder" type="Spod\Sync\Model\Encoder\JsonEncoder" />
+
+    <!-- file based logging -->
+    <preference for="Spod\Sync\Api\SpodLoggerInterface" type="Spod\Sync\Model\Logger\BackendLog" />
+
+    <!-- capture orders -->
+    <type name="Magento\Sales\Api\OrderManagementInterface">
+        <plugin name="spodsync_after_place_order_operation"
+                type="Spod\Sync\Plugin\OrderPlugin"/>
+    </type>
+
+    <!-- log grid -->
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="spodsync_log_listing_data_source" xsi:type="string">Spod\Sync\Model\ResourceModel\SpodLog\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="Spod\Sync\Model\ResourceModel\SpodLog\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">spodsync_log</argument>
+            <argument name="resourceModel" xsi:type="string">Spod\Sync\Model\ResourceModel\SpodLog</argument>
+        </arguments>
+    </virtualType>
+</config>

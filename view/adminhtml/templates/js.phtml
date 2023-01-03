@@ -1,0 +1,266 @@
+<script type="text/javascript">
+    require(
+        ['jquery'],
+        function($) {
+            //
+            // Hide/Show/Status
+            function hideSuccessMsg() {
+                $('.msg-success').hide();
+            }
+
+            function hideSuccess() {
+                hideSuccessMsg();
+                $('.sync-success').hide();
+                $('.spodsyn-check-icn').hide();
+            }
+
+            function hideError() {
+                $('.msg-error').hide();
+                $('.spodsyn-error-icn').hide();
+            }
+
+            function showSuccess() {
+                $('.msg-success').show();
+                $('.spodsyn-check-icn').show();
+            }
+
+            function showError() {
+                $('.msg-error').show();
+                $('.spodsyn-error-icn').show();
+            }
+
+            function showLoader() {
+                $('.check-loader').show();
+            }
+
+            function hideLoader() {
+                $('.check-loader').hide();
+            }
+
+            function showSyncFinished() {
+                $('.success-msg').show();
+            }
+
+            function showDisconnect() {
+                $('.disconnect-part').show();
+            }
+
+            function hideDisconnect() {
+                $('.disconnect-part').hide();
+            }
+
+            function showSubmitButton() {
+                $('.submit-btn').show();
+            }
+
+            function hideSubmitButton() {
+                $('.submit-btn').hide();
+            }
+
+            function enableSubmitButton() {
+                $('.submit-btn').css('opacity', '1.0');
+                $('.submit-btn').attr('disabled', false);
+            }
+
+            function disableSubmitButton() {
+                $('.submit-btn').css('opacity', '0.3');
+                $('.submit-btn').attr('disabled', true);
+            }
+
+            function showDateMsg() {
+                $('.date-msg').show();
+            }
+
+            function hideDateMsg() {
+                $('.date-msg').hide();
+            }
+
+            function setConnectionDate(datetimeStr) {
+                $('.date-msg .date-info').html(datetimeStr);
+            }
+
+            function showDisconnectPopup() {
+                $('#popupOne').show();
+            }
+
+            function addModalOpenTrigger() {
+                $('.dis-btn').click(function () {
+                    showDisconnectPopup();
+                });
+            }
+
+            function hideDisconnectPopup() {
+                $('#popupOne').hide();
+            }
+
+            function addModelCloseTrigger() {
+                $('.closeBtn, .btn-cancel').click(function () {
+                    hideDisconnectPopup();
+                });
+            }
+
+            function addDisconnectTrigger() {
+                $('.btn-confirm-disconnect').click(function () {
+                    triggerDisconnect();
+                });
+            }
+
+            function showDisconnectedMsg() {
+                $('.disconnected-msg').show();
+                setTimeout(function() {
+                    $('.disconnected-msg').hide();
+                }, 10000);
+            }
+
+            function emptyTokenInput() {
+                $('.spodsync--apitoken').val('');
+            }
+
+            //
+            // Processing functions to connect
+            function processToken() {
+                let spodSyncToken = $('.spodsync--apitoken').val();
+                if (spodSyncToken && spodSyncToken.length > 0) {
+                    ajaxSubmitToken(spodSyncToken);
+                }
+            }
+
+            function ajaxSubmitToken(spodSyncToken) {
+                showLoader();
+                jQuery.ajax({
+                    url: "<?php echo $this->getUrl('spodsync/ajax/connect') ?>",
+                    method: 'GET',
+                    data: {'apiToken': spodSyncToken},
+                    success: function (data) {
+                        handleSuccess(data);
+                        if (data.error === 0) {
+                            setTimeout(refreshStatus, 5000);
+                        }
+                    },
+                    error: function() {
+                        hideLoader();
+                        enableSubmitButton();
+                    }
+                });
+            }
+
+            function handleSuccess(data) {
+                hideLoader();
+                showButtonOrSyncStatus(data);
+                showTokenStatus(data);
+                hideSuccessMsg();
+            }
+
+            function showButtonOrSyncStatus(data)
+            {
+                if (data.error === 0) {
+                    hideSubmitButton();
+                    showSyncProgress(data);
+                    showConnectionDate(data);
+                } else {
+                    enableSubmitButton();
+                }
+            }
+
+            function showSyncProgress(data)
+            {
+                if (!data.initsyncEndDate) {
+                    $('.syncing-data').show();
+                } else {
+                    showSyncFinished();
+                    showDisconnect();
+                    $('.syncing-data').hide();
+                }
+            }
+
+            function showConnectionDate(data) {
+                if (data.installDate) {
+                    setConnectionDate(data.installDate);
+                    showDateMsg();
+                }
+            }
+
+            function showTokenStatus(data) {
+                if (data.error === 0) {
+                    hideError();
+                    showSuccess();
+                } else {
+                    hideSuccess();
+                    showError();
+                }
+            }
+
+            //
+            // Disconnect function
+            function triggerDisconnect() {
+                $('.disconnect-loader').show();
+                $('.dis-btn').attr('disabled', true);
+                hideDisconnectPopup();
+                jQuery.ajax({
+                    url: "<?php echo $this->getUrl('spodsync/ajax/disconnect') ?>",
+                    method: 'GET',
+                    data: {},
+                    success: function (data) {
+                        $('.disconnect-loader').hide();
+                        $('.dis-btn').attr('disabled', false);
+                        if (data.error) {
+                            $('.err-disconnected-msg').show();
+                            setTimeout(function() { $('.err-disconnected-msg').hide(); }, 10000);
+                        } else {
+                            emptyTokenInput();
+                            hideDisconnect();
+                            hideSuccess();
+                            hideDateMsg();
+                            showSubmitButton();
+                            showDisconnectedMsg();
+                        }
+                    },
+                    error: function() {
+                        $('.disconnect-loader').hide();
+                        $('.dis-btn').attr('disabled', false);
+                        $('.err-disconnected-msg').show();
+                        setTimeout(function() { $('.err-disconnected-msg').hide(); }, 10000);
+                    }
+                });
+            }
+
+            function refreshStatus() {
+                jQuery.ajax({
+                    url: "<?php echo $this->getUrl('spodsync/ajax/syncstatus') ?>",
+                    method: 'GET',
+                    data: {},
+                    success: function (data) {
+                        handleSuccess(data);
+                        if (!data.initsyncEndDate) {
+                            setTimeout(refreshStatus, 5000);
+                        }
+                    }
+                });
+            }
+
+            $(document).ready(function () {
+                let spodAPIKeyInput = $('.spodsync--apitoken');
+
+                $('.submit-btn').click(function () {
+                    disableSubmitButton();
+                    processToken();
+                });
+
+                disableSubmitButton();
+                spodAPIKeyInput.on('keydown paste input', function() {
+                    disableSubmitButton();
+                    if ($(this).val().length > 0) {
+                        enableSubmitButton();
+                    }
+                });
+
+                addModalOpenTrigger();
+                addModelCloseTrigger();
+                addDisconnectTrigger();
+
+                if (spodAPIKeyInput.val().length > 0) {
+                    refreshStatus();
+                }
+            });
+        });
+</script>
