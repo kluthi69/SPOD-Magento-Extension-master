@@ -1,2 +1,0 @@
-# SPOD-Magento-Extension-master
- 
